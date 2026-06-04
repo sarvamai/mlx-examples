@@ -77,11 +77,11 @@ class MultiHeadAttention(nn.Module):
         k = k.reshape(*k.shape[:2], self.n_head, -1).transpose(0, 2, 3, 1) * scale
         v = v.reshape(*v.shape[:2], self.n_head, -1).transpose(0, 2, 1, 3)
 
-        qk = q @ k
+        qk = q.astype(mx.float32) @ k.astype(mx.float32)
         if mask is not None:
             qk = qk + mask[:n_ctx, :n_ctx]
 
-        w = mx.softmax(qk, axis=-1, precise=True)
+        w = mx.softmax(qk, axis=-1, precise=True).astype(v.dtype)
         out = (w @ v).transpose(0, 2, 1, 3)
         out = out.reshape(n_batch, n_ctx, n_state)
         return out, qk
